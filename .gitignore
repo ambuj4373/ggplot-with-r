@@ -1,39 +1,91 @@
-# History files
-.Rhistory
-.Rapp.history
-
-# Session Data files
-.RData
-
-# User-specific files
-.Ruserdata
-
-# Example code in package build process
-*-Ex.R
-
-# Output files from R CMD build
-/*.tar.gz
-
-# Output files from R CMD check
-/*.Rcheck/
-
-# RStudio files
-.Rproj.user/
-
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
-
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
-
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
-
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
-
-# R Environment Variables
-.Renviron
+#making our first figure in R We will be using gapminder dataset.
+# we will be installing packages and then unpacking them using library.
+install.packages("tidyverse")
+library(tidyverse)
+install.packages("gapminder")
+library(gapminder)
+library(ggplot2)
+library(labels)
+#lets unfold and begin with simple ggplot scatter plot
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp))
+p+geom_point()
+#i can see data points are not so appealing and easy to understand, i will be
+#trying to improve it.
+#building the plot using geom_smooth, the gray area represents standard error.
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp))
+p+geom_smooth()
+#using smooth and point both.
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp))
+p+geom_smooth()+geom_point()
+##IMPORTANT!!! IN THIS OUTPUT R TELLS US SMOOTH() FUNCTION IS USING A METHOD 
+##CALLED GAM, WHICH IN THIS CASE HAS FIT A GENERALIZED METHOD BUT WE ARE GOING 
+##TO ASK R TO USE METHOD LM : "LINEAR MODEL"
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp))
+p+geom_smooth(method = "lm")+geom_point()
+# As we can see scatter pointd are bunched up on the x axis and nothing is very clear to undersatand.
+# I will be transforming linear scale to the log scale on x axis to look data points much better and method = gam.
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp))
+p+geom_smooth(method = "lm")+geom_point() + scale_x_log10()
+#now the data looks good , we are going to add some labelsto understand better
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp))
+p+geom_smooth(method = "lm")+
+  geom_point() + 
+  scale_x_log10(labels = scales::dollar)
+# Mapping Aesthetic vs Setting theme
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp))
+p+geom_smooth(method = "lm", color="orange", se= FALSE, size=1.5)+
+  geom_point(color="cornflowerblue", size= 1, alpha=0.8) + 
+  scale_x_log10(labels = scales::dollar)+
+  labs(x="GDP Per Capita", y= "Life Expectency in years",
+      title= "Economic growth and life expectancy", 
+      subtitle = "Data Points Are Country-Years",
+      caption= "Source:Gapminder")
+#now it looks good, i will be using color in aes() to get some interesting viz
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp, color= continent,))
+p+geom_smooth(method = "loess")+
+  geom_point() + 
+  scale_x_log10(labels = scales::dollar)+
+  labs(x="GDP Per Capita", y= "Life Expectency in years",
+       title= "Economic growth and life expectancy in different continent", 
+       caption= "Source:Gapminder")
+#using color in aes creates legends and R determines on its own the color.
+#now the shade looks odd will try to fill it with same color using fill command in aes()
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp, color= continent,fill= continent))
+p+geom_smooth(method = "loess")+
+  geom_point() + 
+  scale_x_log10(labels = scales::dollar)+
+  labs(x="GDP Per Capita", y= "Life Expectency in years",
+       title= "Economic growth and life expectancy in different continent", 
+       caption= "Source:Gapminder")
+#till now we were mapping aesthetics in ggplot() but now we will try mapping aesthetic in geom_point, which is possible.
+p<- ggplot(data=gapminder, mapping = aes(x=gdpPercap, y= lifeExp))
+p+geom_smooth(method = "loess")+
+  geom_point(mapping = aes(color=continent, alpha= .3)) + 
+  scale_x_log10(labels = scales::dollar)+
+  labs(x="GDP Per Capita", y= "Life Expectency in years",
+       title= "Economic growth and life expectancy in different continent", 
+       caption= "Source:Gapminder")
+--------------------------------------------------------------------------------
+ #lets try another graph
+  
+   p<- ggplot(data=gapminder, mapping = aes(x=year, y= gdpPercap))
+p+ geom_line()
+##the R does not know that yearly observation in the data are group by country, 
+#due to which we are getting this non sensible graph.
+##asking r to group the data in aesthetic
+p<- ggplot(data=gapminder, mapping = aes(x=year, y= gdpPercap))
+p+ geom_line(aes(group=country))
+# this looks very messy, I will be using facet wrap to plot by continent.
+p<- ggplot(data=gapminder, mapping = aes(x=year, y= gdpPercap))
+p+ geom_line(aes(group=country))+facet_wrap(~continent)
+  
+# lets make the facet more beautiful.
+p<- ggplot(data=gapminder, mapping = aes(x=year, y= gdpPercap))
+p+ geom_line(color = "gray70", size = 1.1, aes(group = country))+
+  geom_smooth(size = 1, method = "loess", se=FALSE)+
+  scale_y_log10(labels = scales::dollar)+
+  facet_wrap(~continent, ncol=5)+
+  labs(x= "Year", y= "GDP per capita", title = "GDP per capita on 5 continents")
+  
+##this looks much better now, we could have facet by country, which would have made the group mapping
+##superfluous,. But that would make almost 150 panels
